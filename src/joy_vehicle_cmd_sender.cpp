@@ -18,6 +18,11 @@ void joy_vehicle_cmd_sender::run()
     return;
 }
 
+double sigmoid(double gain, double x) {
+    return 1.0 / (1.0 + exp(-gain * x));
+}
+
+
 void joy_vehicle_cmd_sender::publish_vehicle_cmd_()
 {
     ros::Rate rate(30);
@@ -25,35 +30,20 @@ void joy_vehicle_cmd_sender::publish_vehicle_cmd_()
     {
         if(joy_cmd_)
         {
-            double accel_ratio = 30.0;
+            double accel_ratio = 10.0;
             double brake_ratio = 10.0;
             double steering_ratio = 1.0;
             double accel_input;
             double brake_input;
             double steer_input;
-            if(joy_cmd_->axes[2] < 0)
-            {
-                accel_input = 0;
-            }
-            else
-            {
-                accel_input = joy_cmd_->axes[2];
-            }
-            if(joy_cmd_->axes[3] < 0)
-            {
-                brake_input = 0;
-            }
-            else
-            {
-                brake_input = joy_cmd_->axes[3];
-            }
-            steer_input = joy_cmd_->axes[0];
+
+            accel_input = joy_cmd_->axes[3];
+            //steer_input = 0.05*(2.0 * sigmoid(10.0, joy_cmd_->axes[0]) - 1.0);
+            steer_input = 0.1 * joy_cmd_->axes[0];
+            //steer_input = 0.05 * joy_cmd_->axes[0] * (2 - joy_cmd_->axes[0]);
             geometry_msgs::Twist twist_cmd;
-            twist_cmd.linear.x = accel_input * accel_ratio - brake_input * brake_ratio;
-            if(twist_cmd.linear.x < 0)
-            {
-                twist_cmd.linear.x = 0;
-            }
+            twist_cmd.linear.x = accel_input * accel_ratio;
+
             twist_cmd.linear.y = 0;
             twist_cmd.linear.z = 0;
             twist_cmd.angular.x = 0;
